@@ -10,6 +10,7 @@
                     label="When did you get your work permit"
                     disableFuture
                     v-model="work_permit_date"
+                    :key="work_permit_date"
                 />
             </v-col>
             <v-col cols="4">
@@ -17,6 +18,7 @@
                     label="When did you get your perminent residency"
                     disableFuture
                     v-model="permanent_resident_date"
+                    :key="permanent_resident_date"
                 />
             </v-col>
         </v-row>
@@ -100,9 +102,9 @@ export default {
         },
     },
     data: () => ({
-        work_permit_date: "2019-04-10",
-        permanent_resident_date: "2021-03-01",
-        daysOutSide: [addDayOutside()],
+        work_permit_date: null,
+        permanent_resident_date: null,
+        daysOutSide: [],
     }),
     methods: {
         addDayOutside() {
@@ -112,8 +114,29 @@ export default {
             this.daysOutSide = this.daysOutSide.filter((x, i) => i !== idx);
         },
         saveToDb() {
-            
+            db.collection("citizen_dates").doc(this.userId).set({
+                work_permit_date: this.work_permit_date,
+                permanent_resident_date: this.permanent_resident_date,
+                daysOutSide: this.daysOutSide,
+            }).then(res => {
+                this.$emit("showMessage", {text: "Saved."});
+            })
         }
     },
+    mounted() {
+        db.collection("citizen_dates").doc(this.userId).get().then(res => {
+            console.log('ii-i', res.data())
+            if(res.exists) {
+                let {work_permit_date, permanent_resident_date, daysOutSide} = res.data();
+
+                this.work_permit_date = work_permit_date;
+                this.permanent_resident_date = permanent_resident_date;
+                this.daysOutSide = [...daysOutSide];
+            }
+        }).catch(e => {
+            console.error(e);
+            this.$emit("showMessage", {text: "Unable to fetch your data. Please try again.", error: true});
+        })
+    }
 };
 </script>

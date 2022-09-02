@@ -1,13 +1,15 @@
 <template>
   <v-app>
     <v-main>
-      <DateToApply />
+      <DateToApply v-if="userId" :userId="userId" />
+      <Login v-else />
     </v-main>
   </v-app>
 </template>
 
 <script>
 import DateToApply from "./components/DateToApply";
+import Login from "./components/Login.vue";
 import { auth } from "@/plugins/firebase.js";
 
 export default {
@@ -15,6 +17,7 @@ export default {
 
   components: {
     DateToApply,
+    Login
   },
 
   data: () => ({

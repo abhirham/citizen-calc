@@ -1,6 +1,6 @@
 <template>
     <v-container class="pt-10 mt-10">
-        <v-row justify="end"><v-btn color="primary">save</v-btn></v-row>
+        <v-row justify="end"><v-btn color="primary" @click="saveToDb">save</v-btn></v-row>
         <v-row justify="center"
             >You can apply for citizenship on: {{ citizenshipApplyDate }}</v-row
         >
@@ -111,6 +111,9 @@ export default {
         removeDayOutside(idx) {
             this.daysOutSide = this.daysOutSide.filter((x, i) => i !== idx);
         },
+        saveToDb() {
+            
+        }
     },
 };
 </script>

@@ -1,57 +1,93 @@
 <template>
     <v-container class="pt-10 mt-10">
-        <v-row justify="end"><v-btn color="primary" @click="saveToDb">save</v-btn></v-row>
+        <v-row justify="end"
+            ><v-btn color="primary" @click="saveToDb" :loading="isSavingData"
+                >save</v-btn
+            ></v-row
+        >
         <v-row justify="center"
             >You can apply for citizenship on: {{ citizenshipApplyDate }}</v-row
         >
         <v-row justify="center">
-            <v-col cols="4">
+            <v-col cols="12" sm="6">
                 <DatePicker
+                    :loading="isfetchingData"
                     label="When did you get your work permit"
                     disableFuture
                     v-model="work_permit_date"
                     :key="work_permit_date"
+                    :disabled="isSavingData"
                 />
             </v-col>
-            <v-col cols="4">
+            <v-col cols="12" sm="6">
                 <DatePicker
+                    :loading="isfetchingData"
                     label="When did you get your perminent residency"
                     disableFuture
                     v-model="permanent_resident_date"
                     :key="permanent_resident_date"
+                    :disabled="isSavingData"
                 />
             </v-col>
         </v-row>
         <div>
             <h3>Days outside Canada</h3>
             <div class="mb-3">
-                <v-btn color="primary" @click="addDayOutside">Add new</v-btn>
-            </div>
-            <v-row v-for="(day, idx) in daysOutSide" :key="idx">
-                <v-col cols="4"
-                    ><v-text-field
-                        outlined
-                        dense
-                        hide-details="auto"
-                        label="Description"
-                        v-model="day.description"
-                /></v-col>
-                <v-col cols="3"
-                    ><DatePicker label="From" disableFuture v-model="day.from"
-                /></v-col>
-                <v-col cols="3"
-                    ><DatePicker
-                        label="To"
-                        disableFuture
-                        v-model="day.to"
-                        :minDate="day.from || undefined"
-                /></v-col>
-                <v-col cols="auto"
-                    ><v-btn icon @click="removeDayOutside(idx)"
-                        ><v-icon color="error">mdi-delete</v-icon></v-btn
-                    ></v-col
+                <v-btn
+                    color="primary"
+                    @click="addDayOutside"
+                    :disabled="isSavingData || isfetchingData"
+                    >Add new</v-btn
                 >
+            </div>
+            <v-row align="center" v-if="isfetchingData" justify="center">
+                <v-progress-circular indeterminate color="primary" />
             </v-row>
+            <v-list v-else class="daysOutList">
+                <template v-for="(day, idx) in daysOutSide">
+                    <v-divider v-if="idx > 0" :key="idx + 'div'" />
+                    <v-list-item :key="day.timestamp">
+                        <v-list-item-content>
+                            <v-row>
+                                <v-col sm="4" cols="12"
+                                    ><v-text-field
+                                        outlined
+                                        dense
+                                        hide-details="auto"
+                                        label="Description"
+                                        v-model="day.description"
+                                        :disabled="isSavingData"
+                                /></v-col>
+                                <v-col sm="4" cols="12"
+                                    ><DatePicker
+                                        label="From"
+                                        disableFuture
+                                        v-model="day.from"
+                                        :disabled="isSavingData"
+                                /></v-col>
+                                <v-col sm="4" cols="12"
+                                    ><DatePicker
+                                        label="To"
+                                        disableFuture
+                                        v-model="day.to"
+                                        :minDate="day.from || undefined"
+                                        :disabled="isSavingData"
+                                /></v-col>
+                            </v-row>
+                        </v-list-item-content>
+                        <v-list-item-action>
+                            <v-btn
+                                icon
+                                @click="removeDayOutside(day.timestamp)"
+                                :disabled="isSavingData"
+                                ><v-icon color="error"
+                                    >mdi-delete</v-icon
+                                ></v-btn
+                            >
+                        </v-list-item-action>
+                    </v-list-item>
+                </template>
+            </v-list>
         </div>
     </v-container>
 </template>
@@ -67,6 +103,7 @@ function addDayOutside() {
             description: "",
             from: null,
             to: null,
+            timestamp: Date.now(),
         })
     );
 }
@@ -105,38 +142,73 @@ export default {
         work_permit_date: null,
         permanent_resident_date: null,
         daysOutSide: [],
+        isSavingData: false,
+        isfetchingData: false,
     }),
     methods: {
         addDayOutside() {
-            this.daysOutSide = [...this.daysOutSide, addDayOutside()];
+            this.daysOutSide = [addDayOutside(), ...this.daysOutSide];
         },
-        removeDayOutside(idx) {
-            this.daysOutSide = this.daysOutSide.filter((x, i) => i !== idx);
+        removeDayOutside(timestamp) {
+            this.daysOutSide = this.daysOutSide.filter(
+                (x, i) => x.timestamp !== timestamp
+            );
         },
         saveToDb() {
-            db.collection("citizen_dates").doc(this.userId).set({
-                work_permit_date: this.work_permit_date,
-                permanent_resident_date: this.permanent_resident_date,
-                daysOutSide: this.daysOutSide,
-            }).then(res => {
-                this.$emit("showMessage", {text: "Saved."});
-            })
-        }
+            this.isSavingData = true;
+            db.collection("citizen_dates")
+                .doc(this.userId)
+                .set({
+                    work_permit_date: this.work_permit_date,
+                    permanent_resident_date: this.permanent_resident_date,
+                    daysOutSide: this.daysOutSide,
+                })
+                .then((res) => {
+                    this.$emit("showMessage", { text: "Saved." });
+                })
+                .catch((e) => {
+                    console.error(e);
+                    this.$emit("showMessage", {
+                        text: "Unable to save data. Please try again.",
+                        error: true,
+                    });
+                })
+                .finally(() => (this.isSavingData = false));
+        },
     },
     mounted() {
-        db.collection("citizen_dates").doc(this.userId).get().then(res => {
-            console.log('ii-i', res.data())
-            if(res.exists) {
-                let {work_permit_date, permanent_resident_date, daysOutSide} = res.data();
+        this.isfetchingData = true;
+        db.collection("citizen_dates")
+            .doc(this.userId)
+            .get()
+            .then((res) => {
+                if (res.exists) {
+                    let {
+                        work_permit_date,
+                        permanent_resident_date,
+                        daysOutSide,
+                    } = res.data();
 
-                this.work_permit_date = work_permit_date;
-                this.permanent_resident_date = permanent_resident_date;
-                this.daysOutSide = [...daysOutSide];
-            }
-        }).catch(e => {
-            console.error(e);
-            this.$emit("showMessage", {text: "Unable to fetch your data. Please try again.", error: true});
-        })
-    }
+                    this.work_permit_date = work_permit_date;
+                    this.permanent_resident_date = permanent_resident_date;
+                    this.daysOutSide = [...daysOutSide];
+                }
+            })
+            .catch((e) => {
+                console.error(e);
+                this.$emit("showMessage", {
+                    text: "Unable to fetch your data. Please try again.",
+                    error: true,
+                });
+            })
+            .finally(() => (this.isfetchingData = false));
+    },
 };
 </script>
+
+<style scoped>
+.daysOutList {
+    max-height: calc(100vh - 400px);
+    overflow: auto;
+}
+</style>

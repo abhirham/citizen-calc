@@ -1,16 +1,15 @@
 <template>
-    <div>
-        you are being logged in.
-    </div>
+    <div id="firebaseui-auth-container"></div>
 </template>
 
 <script>
-import { auth } from "@/plugins/firebase.js";
+import { start_auth } from "@/plugins/firebase.js";
+import "firebaseui/dist/firebaseui.css";
 
 export default {
-    name: 'Login',
+    name: "Login",
     mounted() {
-        auth.signInAnonymously();
-    }
-}
+        start_auth();
+    },
+};
 </script>

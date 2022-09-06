@@ -1,9 +1,13 @@
 <template>
     <v-app>
         <v-main>
-            <DateToApply @showMessage="showMessage" v-if="userId" :userId="userId" />
-            <Login v-else />
-            <SnackBar :text="snackBarMessage" v-model="showSnackBar" :error="showSnackBarError" />
+            <Login v-if="userId === null" />
+            <DateToApply @showMessage="showMessage" v-else :userId="userId" />
+            <SnackBar
+                :text="snackBarMessage"
+                v-model="showSnackBar"
+                :error="showSnackBarError"
+            />
         </v-main>
     </v-app>
 </template>
@@ -30,7 +34,7 @@ export default {
         showSnackBarError: false,
     }),
     methods: {
-        showMessage({text, error = false}) {
+        showMessage({ text, error = false }) {
             this.snackBarMessage = text;
             this.showSnackBar = true;
             this.showSnackBarError = error;

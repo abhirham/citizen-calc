@@ -14,13 +14,13 @@
 export default {
     name: "SnackBar",
     props: {
-      value: { required: true, type: Boolean },
-      error: { default: false, type: Boolean },
-      text: { required: true, type: String },
+        value: { required: true, type: Boolean },
+        error: { default: false, type: Boolean },
+        text: { required: true, type: String },
     },
     computed: {
         color() {
-            return this.error ? "error" : "success"; 
+            return this.error ? "error" : "success";
         },
         snackbar: {
             get() {

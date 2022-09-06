@@ -1,6 +1,13 @@
 <template>
-    <v-menu ref="menu" v-model="showMenu" :return-value.sync="returnValToUse" :close-on-content-click="false" offset-y min-width="290px" >
-        <template v-slot:activator="{ on, attrs}">
+    <v-menu
+        ref="menu"
+        v-model="showMenu"
+        :return-value.sync="returnValToUse"
+        :close-on-content-click="false"
+        offset-y
+        min-width="290px"
+    >
+        <template v-slot:activator="{ on, attrs }">
             <v-text-field
                 :class="inputClass"
                 dense
@@ -16,16 +23,30 @@
                 :label="label"
                 v-on="on"
                 v-bind="attrs"
-                :disabled="disabled"
+                :loading="loading"
+                :disabled="disabled || loading"
             ></v-text-field>
         </template>
-        <v-date-picker class="customDatePicker" @change="handleChange" :range="range" :max="max" :min="min" clearable v-model="localDate">
+        <v-date-picker
+            class="customDatePicker"
+            @change="handleChange"
+            :range="range"
+            :max="max"
+            :min="min"
+            clearable
+            v-model="localDate"
+        >
             <template v-if="range">
                 <v-spacer />
-                <v-btn text color="primary" @click="showMenu = false" >
+                <v-btn text color="primary" @click="showMenu = false">
                     Cancel
                 </v-btn>
-                <v-btn text color="primary" @click="handleOkClick" :disabled="localDate.length < 2" >
+                <v-btn
+                    text
+                    color="primary"
+                    @click="handleOkClick"
+                    :disabled="localDate.length < 2"
+                >
                     OK
                 </v-btn>
             </template>
@@ -34,31 +55,32 @@
 </template>
 
 <script>
-import moment from 'moment';
+import moment from "moment";
 
 export default {
-    name: 'DatePicker',
+    name: "DatePicker",
     props: {
-        value: {required: true},
+        value: { required: true },
         label: String,
-        inputClass: {required: false},
-        disableFuture: {type: Boolean, default: false},
-        clearable: {type: Boolean, default: true},
-        hideDetails: {default: 'auto'},
-        disablePast: {type: Boolean, default: false},
-        inputBackgroundColor: {type: String, default: undefined},
+        inputClass: { required: false },
+        disableFuture: { type: Boolean, default: false },
+        clearable: { type: Boolean, default: true },
+        loading: { type: Boolean, default: false },
+        hideDetails: { default: "auto" },
+        disablePast: { type: Boolean, default: false },
+        inputBackgroundColor: { type: String, default: undefined },
         maxDate: String,
         minDate: String,
-        disabled: {type: Boolean, default: false},
-        range: {type: Boolean, default: false}, // if you make it a range picker, then v-model needs to be an array.
-        rules:{type:Array,default:()=>[]}, // to apply validation rules
-        displayDateFormatter: {type: Function}
+        disabled: { type: Boolean, default: false },
+        range: { type: Boolean, default: false }, // if you make it a range picker, then v-model needs to be an array.
+        rules: { type: Array, default: () => [] }, // to apply validation rules
+        displayDateFormatter: { type: Function },
     },
     data() {
         return {
             showMenu: false,
             localDate: [],
-        }
+        };
     },
     computed: {
         returnValToUse: {
@@ -66,7 +88,7 @@ export default {
                 return this.localDate;
             },
             set(val) {
-                if(!this.range) return;
+                if (!this.range) return;
 
                 this.localDate = val;
             },
@@ -76,19 +98,25 @@ export default {
                 return this.value;
             },
             set(val) {
-                this.$emit('input', val);
-            }
+                this.$emit("input", val);
+            },
         },
         max() {
-            if(this.disableFuture === true) return moment().format('YYYY-MM-DD');
+            if (this.disableFuture === true)
+                return moment().format("YYYY-MM-DD");
             return this.maxDate;
         },
         min() {
-            if(this.disablePast === true) return moment().format('YYYY-MM-DD');
+            if (this.disablePast === true) return moment().format("YYYY-MM-DD");
             return this.minDate;
         },
         formattedDisplayDate() {
-            if(this.displayDateFormatter === undefined || Array.isArray(this.localDate) || !this.localDate) return this.localDate;
+            if (
+                this.displayDateFormatter === undefined ||
+                Array.isArray(this.localDate) ||
+                !this.localDate
+            )
+                return this.localDate;
 
             return this.displayDateFormatter(this.localDate);
         },
@@ -100,7 +128,7 @@ export default {
             this.dateVal = this.localDate;
         },
         handleChange() {
-            if(this.range) {
+            if (this.range) {
                 return;
             }
 
@@ -108,31 +136,31 @@ export default {
             this.showMenu = false;
         },
         handleClearClick() {
-            if(this.range) {
+            if (this.range) {
                 this.dateVal = [];
                 return;
             }
 
             this.dateVal = null;
-        }
+        },
     },
     watch: {
         showMenu(val) {
-            if(val === true) {
+            if (val === true) {
                 this.localDate = this.dateVal;
             }
-        }
+        },
     },
     mounted() {
-        if(this.dateVal) {
+        if (this.dateVal) {
             this.localDate = this.dateVal;
         }
-    }
-}
+    },
+};
 </script>
 
 <style>
-    .customDatePicker .v-date-picker-table td {
-        border: unset;
-    }
+.customDatePicker .v-date-picker-table td {
+    border: unset;
+}
 </style>
